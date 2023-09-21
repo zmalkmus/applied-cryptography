@@ -32,7 +32,7 @@ def truncate_sha(input_string, n_bits):
 # Preimage attack
 # ==================================================
 
-def preimage(n_bits, output_file):
+def preimage(n_bits):
     rand_len = 20
 
     match_string = truncate_sha(generate_random_string(rand_len), n_bits)
@@ -46,15 +46,13 @@ def preimage(n_bits, output_file):
         random_string = truncate_sha(generate_random_string(rand_len), n_bits)
 
         if random_string == match_string:
-            print("Match found!")
-            print("Number of tries:", tries)
-            return
+            return tries
 
 # ==================================================
 # Collision attack
 # ==================================================
 
-def collision(n_bits, output_file):
+def collision(n_bits):
     collision_table = set()
     rand_len = 20
 
@@ -71,9 +69,7 @@ def collision(n_bits, output_file):
         random_string = truncate_sha(generate_random_string(rand_len), n_bits)
 
         if random_string in collision_table:
-            print("Collision found!")
-            print("Number of tries:", tries)
-            return
+            return tries
         else:
             collision_table.add(random_string)
 
@@ -94,11 +90,17 @@ if __name__ == "__main__":
     with open('preimage.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         writer.writerow(['n_bits', 'iterations'])
+
         for n_bits in range(2, 23, 2):
-            preimage(n_bits, writer)
+            for i in range(50):
+                n_tries = preimage(n_bits)
+                writer.writerow([n_bits, n_tries ])
 
     with open('collision.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         writer.writerow(['n_bits', 'iterations'])
+
         for n_bits in range(2, 23, 2):
-            collision(n_bits, writer)
+            for i in range(50):
+                n_tries = collision(n_bits)
+                writer.writerow([n_bits, n_tries])
