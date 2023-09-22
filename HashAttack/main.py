@@ -32,9 +32,7 @@ def truncate_sha(input_string, n_bits):
 # Preimage attack
 # ==================================================
 
-def preimage(n_bits):
-    rand_len = 20
-
+def preimage(n_bits, rand_len):
     match_string = truncate_sha(generate_random_string(rand_len), n_bits)
     print("Matching string:", match_string)
 
@@ -52,9 +50,8 @@ def preimage(n_bits):
 # Collision attack
 # ==================================================
 
-def collision(n_bits):
+def collision(n_bits, rand_len):
     collision_table = set()
-    rand_len = 20
 
     initial_string = truncate_sha(generate_random_string(rand_len), n_bits)
     print("Initial string:", initial_string)
@@ -80,25 +77,22 @@ def collision(n_bits):
 if __name__ == "__main__":
     print("Welcome to hash attack")
 
-    # Your report should include two graphs summarizing your results, one for the preimage attack and one for the collision attack.
-    # Your graph should include a line showing the expected number of iterations to conduct the attack for each of your tested bit sizes.
-    # Your graph should also summarize the average number of iterations needed to produce a collision for each tested bit size.
-    # The graph should also include details about the variance in your results. This could be done by plotting all samples, using a violin plot, or using a box and whisker plot. Recommendation: Use a logarithmic axis for iterations.
+    rand_len = 20
 
     with open('preimage.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         writer.writerow(['n_bits', 'n_tries'])
 
-        for n_bits in range(2, 23, 2):
+        for n_bits in range(8, 23, 2):
             for i in range(50):
-                n_tries = preimage(n_bits)
-                writer.writerow([n_bits, n_tries ])
+                n_tries = preimage(n_bits, rand_len)
+                writer.writerow([n_bits, n_tries])
 
     with open('collision.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         writer.writerow(['n_bits', 'n_tries'])
 
-        for n_bits in range(2, 23, 2):
+        for n_bits in range(8, 23, 2):
             for i in range(50):
-                n_tries = collision(n_bits)
+                n_tries = collision(n_bits, rand_len)
                 writer.writerow([n_bits, n_tries])
