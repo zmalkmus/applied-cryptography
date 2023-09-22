@@ -84,12 +84,10 @@ if __name__ == "__main__":
     # Your graph should include a line showing the expected number of iterations to conduct the attack for each of your tested bit sizes.
     # Your graph should also summarize the average number of iterations needed to produce a collision for each tested bit size.
     # The graph should also include details about the variance in your results. This could be done by plotting all samples, using a violin plot, or using a box and whisker plot. Recommendation: Use a logarithmic axis for iterations.
-    
-    # TODO: NEED TO WRITE TO CSV FILE IN RESPECTIVE FUNCTIONS
 
     with open('preimage.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
-        writer.writerow(['n_bits', 'iterations'])
+        writer.writerow(['n_bits', 'n_tries'])
 
         for n_bits in range(2, 23, 2):
             for i in range(50):
@@ -98,7 +96,7 @@ if __name__ == "__main__":
 
     with open('collision.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
-        writer.writerow(['n_bits', 'iterations'])
+        writer.writerow(['n_bits', 'n_tries'])
 
         for n_bits in range(2, 23, 2):
             for i in range(50):
