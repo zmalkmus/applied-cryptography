@@ -13,6 +13,17 @@ class SHA:
         self.IV = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0]
 
         return
+    
+
+    # ===================================================
+    # Utility Functions
+    # ===================================================
+
+    def bytes_to_int(self, bytes):
+        return int.from_bytes(bytes)
+    
+    def int_to_bytes(self, x: int) -> bytes:
+        return x.to_bytes((x.bit_length() + 7) // 8, 'big')
 
     # ====================================================
     # SHA Functions
@@ -72,11 +83,11 @@ class SHA:
             word = (word << 1) | b
         return word
 
-    def sha_pad(self, s):
-        m = self.str_to_int(s)
+    def pad(self, bytes):
+        m = self.bytes_to_int(bytes)
 
-        l = len(s) * 8
-        k = 448 % 512 - l - 1
+        l = len(bytes) * 8
+        k = (448 - l - 1) % 512
 
         m = self.append_bits(m, 1, 1)
         m = self.append_bits(m, 0, k)
@@ -84,43 +95,54 @@ class SHA:
         m = self.append_bits(m, 0, 64)
         m = m ^ l
 
-        # print("l:", l)
-
-        # print(m.bit_length())
-
-        return m
+        return self.int_to_bytes(m)
     
     # ===================================================
     # Message parsing
     # ===================================================
 
-    def parse_message(self, m):
-        # Parsed into N 512 bit blocks
+    def parse(self, bytes):
+        # Parsed into N 512 bit blocks (16, 32 bit words)
+        n = (len(bytes) * 8) // 512
+
+        M = []
+
+        for i in range(n):
+            block = []
+            for j in range(0, 64, 4):
+                word = bytes[(64*i) + j: (64 * i) + j + 4]
+                block.append(word)
+
+            M.append(block)
+
+        return M
+    
+    # ===================================================
+    # SHA-1
+    # ===================================================
+    
+    def sha(M):
+        # Preprocessing
+
+        # for i in range(M):
+
+
+        # Hash Computation
         return
-    
-    # ===================================================
-    # Messaging Schedule
-    # ===================================================
-
-
-
-    # ===================================================
-    # Utility Functions
-    # ===================================================
-
-    def bytes_to_int(self, bytes):
-        return int(bytes, 16)
-
-    def int_to_bytes(self, integer):
-        return integer.to_bytes()
-
-    def str_to_int(self, str):
-        encoded_bytes = str.encode('utf-8')
-        return int(binascii.hexlify(encoded_bytes), 16)
-    
 
 if __name__ == "__main__":
     print("Welcome to MAC attack")
     sha = SHA()
-    print(bin(sha.sha_pad("abc")))
-    # print(bin(sha.append_bits(0b1111, 0, 4)))
+    
+    # m = b'This is a test of SHA-1.'
+    m = b"Kerckhoff's principle is the foundation on which modern cryptography is built."
+
+    print("Message:     ", m)
+
+    padded_m = sha.pad(m)
+    print("Padded:      ", padded_m)
+
+    print("Starting IV: ", sha.IV)
+
+    parsed_m = sha.parse(padded_m)
+    print("Parsed:      ", parsed_m)
