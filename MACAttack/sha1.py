@@ -1,6 +1,5 @@
+import sys
 import struct
-import binascii
-import numpy as np
 
 class SHA:
 
@@ -13,7 +12,6 @@ class SHA:
         self.IV = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0]
 
         return
-    
 
     # ===================================================
     # Utility Functions
@@ -24,55 +22,6 @@ class SHA:
     
     def int_to_bytes(self, x: int) -> bytes:
         return x.to_bytes((x.bit_length() + 7) // 8, 'big')
-
-    # ====================================================
-    # SHA Functions
-    # ====================================================
-
-    def sha_function(self, t, x, y, z):
-        try:
-            if (0 <= t < 20):
-                return self.ch(x, y, z)
-            elif (t < 40):
-                return self.parity(x, y, z)
-            elif (t < 60):
-                return self.maj(x, y, z)
-            elif (t < 80):
-                return self.parity(x, y, z)
-            else:
-                raise Exception("t not in range.")
-        except Exception as e:
-            print(f"SHA_FUNCTION: {e}")
-            exit(1)
-
-    def ch(self, x, y, z):
-        return (x ^ y) ^ (~x ^ z)
-
-    def parity(self, x, y, z):
-        return (x ^ y ^ z)
-
-    def maj(self, x, y, z):
-        return (x ^ y) ^ (x ^ z) ^ (y ^ z)
-
-    # ====================================================
-    # SHA Konstants
-    # ====================================================
-
-    def K(self, t):
-        try:
-            if (0 <= t < 20):
-                return 0x5a827999
-            elif (t < 40):
-                return 0x6ed9eba1
-            elif (t < 60):
-                return 0x8f1bbcdc
-            elif (t < 80):
-                return 0xca62c1d6
-            else:
-                raise Exception("t not in range.")
-        except Exception as e:
-            print(f"K: {e}")
-            exit(1)
 
     # ===================================================
     # Padding
@@ -110,39 +59,93 @@ class SHA:
         for i in range(n):
             block = []
             for j in range(0, 64, 4):
-                word = bytes[(64*i) + j: (64 * i) + j + 4]
+                word = self.bytes_to_int(bytes[((64*i) + j) : ((64 * i) + j + 4)])
                 block.append(word)
 
             M.append(block)
-
         return M
     
     # ===================================================
-    # SHA-1
+    # Messaging Schedule
     # ===================================================
+
+    def F(self, t, x, y, z):
+        if   (0 <= t < 20):  return (x & y) ^ (~x & z)
+        elif (20 <= t < 40): return (x ^ y ^ z)
+        elif (40 <= t < 60): return (x & y) ^ (x & z) ^ (y & z)
+        elif (60 <= t < 80): return (x ^ y ^ z)
+        else: sys.exit("F: bad t")
+
+    def K(self, t):
+        if   (0 <= t < 20):  return 0x5a827999
+        elif (20 <= t < 40): return 0x6ed9eba1
+        elif (40 <= t < 60): return 0x8f1bbcdc
+        elif (60 <= t < 80): return 0xca62c1d6
+        else: sys.exit("K: bad t")
+
+    def ROTL(self, n, val):
+        return (val << n | val >> (32-n)) & 0xFFFFFFFF
     
-    def sha(M):
-        # Preprocessing
+    def hash(self, m):
+        padded_m = self.pad(m)
+        M = self.parse(padded_m)
+        N = len(M)
+        H = self.IV.copy()
+        
+        for i in range(N):
+            # 1
+            W = [0] * 80
+            for t in range(16):
+                W[t] = M[i][t]
+            for t in range(16,80):
+                W[t] = self.ROTL(1, W[t-3] ^ W[t-8] ^ W[t-14] ^ W[t-16])
 
-        # for i in range(M):
+            # 2
+            a = H[0]
+            b = H[1]
+            c = H[2]
+            d = H[3]
+            e = H[4]
 
+            # 3
+            for t in range(80):
+                temp = (self.ROTL(5, a) + self.F(t, b, c, d) + e + self.K(t) + W[t]) & 0xFFFFFFFF
+                e = d
+                d = c
+                c = self.ROTL(30, b)
+                b = a
+                a = temp
 
-        # Hash Computation
-        return
+            # 4
+            H[0] = (a + H[0]) & 0xFFFFFFFF
+            H[1] = (b + H[1]) & 0xFFFFFFFF
+            H[2] = (c + H[2]) & 0xFFFFFFFF
+            H[3] = (d + H[3]) & 0xFFFFFFFF
+            H[4] = (e + H[4]) & 0xFFFFFFFF
+
+        return ''.join([hex(x)[2:].zfill(8) for x in H])
+
+# ===================================================
+# Main
+# ===================================================
 
 if __name__ == "__main__":
-    print("Welcome to MAC attack")
     sha = SHA()
     
-    # m = b'This is a test of SHA-1.'
-    m = b"Kerckhoff's principle is the foundation on which modern cryptography is built."
+    m1 = b'This is a test of SHA-1.'
+    m2 = b"Kerckhoff's principle is the foundation on which modern cryptography is built."
+    m3 = b'SHA-1 is no longer considered a secure hashing algorithm.'
+    m4 = b'SHA-2 or SHA-3 should be used in place of SHA-1.'
+    m5 = b'Never roll your own crypto!'
+    
+    d1 = sha.hash(m1)
+    d2 = sha.hash(m2)
+    d3 = sha.hash(m3)
+    d4 = sha.hash(m4)
+    d5 = sha.hash(m5)
 
-    print("Message:     ", m)
-
-    padded_m = sha.pad(m)
-    print("Padded:      ", padded_m)
-
-    print("Starting IV: ", sha.IV)
-
-    parsed_m = sha.parse(padded_m)
-    print("Parsed:      ", parsed_m)
+    print(d1)
+    print(d2)
+    print(d3)
+    print(d4)
+    print(d5)
