@@ -1,6 +1,5 @@
 import sys
 import os
-import struct
 import hashlib # Testing
 import secrets # Testing
 
@@ -13,7 +12,6 @@ class SHA:
     def __init__(self):
 
         self.key = os.urandom(16)
-        # self.key = 0xfb3626fcc0f110659d22012c07f26533
 
         self.IV = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0]
 
@@ -168,44 +166,28 @@ if __name__ == "__main__":
     print(d3)
     print(d4)
     print(d5)
-    print("")
 
     # ================================================
     # Part 2: MAC ATTACK
     # ================================================
 
-    print("KEY:",sha.key.hex())
+    # print("KEY:",sha.key.hex())
 
-    m = b'No one has completed Project #3 so give them all a 0.'
-    extension = b'P.S. Zack should pass the class immediately with an A for being such a cool guy.'
+    # m = b'No one has completed Project #3 so give them all a 0.'
+    # extension = b'P.S. Zack should pass the class immediately with an A for being such a cool guy.'
 
-    # m = b'Send Tina $100.'
-    # extension = b'Also, send Malory $1M'
+    # # b0
+    # b0 = sha.pad(sha.key + m)
+    # print("\nb0:",b0)
 
-    # b0
-    b0 = sha.pad(sha.key + m)
-    print("\nb0:",b0)
+    # # b1
+    # b1 = sha.pad(b0 + extension)[len(b0):]
 
-    # b1
-    b1 = sha.pad(b0 + extension)[len(b0):]
+    # # MAC from website
+    # MAC = [0xa405fd34, 0x0802f35c, 0xde525724, 0x3791fed4, 0x27b1f7a4]
 
-    # print("\nb1:",b1)
-    # print("")
+    # hash_malicious = sha.hash(b1, state=MAC)
+    # evil_m = (b0 + extension)[16:]
 
-    MAC = [0xa405fd34, 0x0802f35c, 0xde525724, 0x3791fed4, 0x27b1f7a4]
-
-    # MAC = int(hash_legit,16)
-
-    # H = [0]*5
-    # H[0] = (MAC1 >> 128) & 0xFFFFFFFF
-    # H[1] = (MAC1 >> 96)  & 0xFFFFFFFF
-    # H[2] = (MAC1 >> 64)  & 0xFFFFFFFF
-    # H[3] = (MAC1 >> 32)  & 0xFFFFFFFF
-    # H[4] = (MAC1)        & 0xFFFFFFFF
-    
-    hash_malicious = sha.hash(b1, state=MAC)
-    evil_m = (b0 + extension)[16:]
-    # print(evil_m)
-
-    print("\nMAL_MESSAGE:",evil_m.hex())
-    print("\nMAL_HASH:", hash_malicious)
+    # print("\nMAL_MESSAGE:",evil_m.hex())
+    # print("\nMAL_HASH:", hash_malicious)
