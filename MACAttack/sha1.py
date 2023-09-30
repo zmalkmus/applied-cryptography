@@ -1,6 +1,10 @@
 import sys
 import os
 
+# ================CHANGE MAC HERE===================
+MAC = 0x0813e52e87dad8c25ac59e078fb476d2217f57c8
+# ==================================================
+
 class SHA:
 
     # ====================================================
@@ -124,6 +128,8 @@ if __name__ == "__main__":
     # Part 1: SHA-1
     # ===================================================
 
+    print("\n================ PART 1 ================\n")
+
     m1 = sha.pad(b'This is a test of SHA-1.')
     m2 = sha.pad(b"Kerckhoff's principle is the foundation on which modern cryptography is built.")
     m3 = sha.pad(b'SHA-1 is no longer considered a secure hashing algorithm.')
@@ -142,23 +148,28 @@ if __name__ == "__main__":
     print(d4)
     print(d5)
 
-    exit()
-
     # ===================================================
     # Part 2: MAC ATTACK
     # ===================================================
+
+    print("\n================ PART 2 ================\n")
 
     m = b'No one has completed Project #3 so give them all a 0.'
     extension = b'P.S. Zack should pass the class immediately with an A for being such a cool guy.'
 
     b0 = sha.pad(sha.key + m)
     b1 = sha.pad(b0 + extension)[len(b0):]
+    
+    H = [0] * 5
 
-    # MAC from website
-    MAC = [0xb30f8776, 0x7a856960, 0xfa8b3ed1, 0xc0b6ecc7, 0x77683e97]
+    H[0] = (MAC >> 128) & 0xFFFFFFFF
+    H[1] = (MAC >> 96)  & 0xFFFFFFFF
+    H[2] = (MAC >> 64)  & 0xFFFFFFFF
+    H[3] = (MAC >> 32)  & 0xFFFFFFFF
+    H[4] = (MAC >> 0)   & 0xFFFFFFFF
 
-    hash_malicious = sha.hash(b1, state=MAC)
+    hash_malicious = sha.hash(b1, state=H)
     evil_m = (b0 + extension)[16:]
 
-    print("\nMAL_MESSAGE:",evil_m.hex())
+    print("MAL_MESSAGE:",evil_m.hex())
     print("\nMAL_HASH:", hash_malicious)
