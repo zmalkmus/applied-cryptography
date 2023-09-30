@@ -1,7 +1,5 @@
 import sys
 import os
-import hashlib # Testing
-import secrets # Testing
 
 class SHA:
 
@@ -121,29 +119,6 @@ class SHA:
 
 if __name__ == "__main__":
     sha = SHA()
-
-    # ================================================
-    # Test SHA
-    # ================================================
-
-    # for i in range(100000):
-    #     message_length = secrets.randbelow(100) + 1
-    #     random_message = secrets.token_bytes(message_length)
-
-    #     sha1_hash = hashlib.sha1()
-    #     sha1_hash.update(random_message)
-    #     hash_hex = sha1_hash.digest()
-
-    #     my_sha = SHA()
-    #     d = sha.hash(random_message)
-    #     if (d == hash_hex.hex()):
-    #         # print(True)
-    #         continue
-    #     else:
-    #         print("\nMESSAGE:     ",random_message)
-    #         print(len(random_message))
-    #         print("MY_HASH:     ",d)
-    #         print("CORRECT_HASH:",hash_hex.hex())
     
     # ===================================================
     # Part 1: SHA-1
@@ -167,27 +142,23 @@ if __name__ == "__main__":
     print(d4)
     print(d5)
 
-    # ================================================
+    exit()
+
+    # ===================================================
     # Part 2: MAC ATTACK
-    # ================================================
+    # ===================================================
 
-    # print("KEY:",sha.key.hex())
+    m = b'No one has completed Project #3 so give them all a 0.'
+    extension = b'P.S. Zack should pass the class immediately with an A for being such a cool guy.'
 
-    # m = b'No one has completed Project #3 so give them all a 0.'
-    # extension = b'P.S. Zack should pass the class immediately with an A for being such a cool guy.'
+    b0 = sha.pad(sha.key + m)
+    b1 = sha.pad(b0 + extension)[len(b0):]
 
-    # # b0
-    # b0 = sha.pad(sha.key + m)
-    # print("\nb0:",b0)
+    # MAC from website
+    MAC = [0xb30f8776, 0x7a856960, 0xfa8b3ed1, 0xc0b6ecc7, 0x77683e97]
 
-    # # b1
-    # b1 = sha.pad(b0 + extension)[len(b0):]
+    hash_malicious = sha.hash(b1, state=MAC)
+    evil_m = (b0 + extension)[16:]
 
-    # # MAC from website
-    # MAC = [0xa405fd34, 0x0802f35c, 0xde525724, 0x3791fed4, 0x27b1f7a4]
-
-    # hash_malicious = sha.hash(b1, state=MAC)
-    # evil_m = (b0 + extension)[16:]
-
-    # print("\nMAL_MESSAGE:",evil_m.hex())
-    # print("\nMAL_HASH:", hash_malicious)
+    print("\nMAL_MESSAGE:",evil_m.hex())
+    print("\nMAL_HASH:", hash_malicious)
