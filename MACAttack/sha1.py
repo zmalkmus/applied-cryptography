@@ -171,5 +171,5 @@ if __name__ == "__main__":
     hash_malicious = sha.hash(b1, state=H)
     evil_m = (b0 + extension)[16:]
 
-    print("MAL_MESSAGE:",evil_m.hex())
+    print("MAL_MESSAGE:", evil_m.hex())
     print("\nMAL_HASH:", hash_malicious)
