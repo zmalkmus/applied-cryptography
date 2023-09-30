@@ -31,10 +31,10 @@ class SHA:
             word = (word << 1) | b
         return word
 
-    def evil_pad(self, k, bytes):
+    def evil_pad(self, bytes, klen):
         m = self.bytes_to_int(bytes)
 
-        l = len(bytes) * 8 + k
+        l = (len(bytes) + klen) * 8
         print("Evil Length:",l)
         k = (448 - l - 1) % 512
 
@@ -103,10 +103,10 @@ class SHA:
     def ROTL(self, n, val):
         return (val << n | val >> (32-n)) & 0xFFFFFFFF
     
-    def evil_hash(self, original, extension, start):
-        padded_m = self.evil_pad(original, 128)
+    def evil_hash(self, original, extension, start, klen):
+        padded_m = self.evil_pad(original, klen)
         evil_m = padded_m + extension
-        padded_evil_m = self.evil_pad(evil_m, 128)
+        padded_evil_m = self.evil_pad(evil_m, klen)
 
         M = self.parse(padded_evil_m)
         N = len(M)
@@ -162,9 +162,9 @@ if __name__ == "__main__":
     extension = b'P.S. Zack should pass the class immediately for being such a cool guy.'
     # extension = b'Also, send Malory $1M'
 
-    MAC = [0xb30f8776, 0x7a856960, 0xfa8b3ed1, 0xc0b6ecc7, 0x77683e97]
+    MAC = [0xf0f41293, 0x129f7c3b, 0x8b119aea, 0xd5058245, 0x788565d3]
 
-    evil_m, evil_MAC = sha.evil_hash(original, extension, MAC)
+    evil_m, evil_MAC = sha.evil_hash(original, extension, MAC, 16)
 
-    print("Evil Message:", evil_m)
+    print("Evil Message:", evil_m.hex())
     print("Evil MAC:", evil_MAC)
