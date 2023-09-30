@@ -2,7 +2,7 @@ import sys
 import os
 
 # ================CHANGE MAC HERE===================
-MAC = 0x0813e52e87dad8c25ac59e078fb476d2217f57c8
+MAC = 0x7f8fe43f0ac54d5ad8e46aa7ffbfa3a6f221c33e
 # ==================================================
 
 class SHA:
@@ -171,5 +171,12 @@ if __name__ == "__main__":
     hash_malicious = sha.hash(b1, state=H)
     evil_m = (b0 + extension)[16:]
 
-    print("MAL_MESSAGE:", evil_m.hex())
-    print("\nMAL_HASH:", hash_malicious)
+    print("MAL_MESSAGE:")
+    print("---------")
+    print(evil_m.hex())
+    print("---------")
+
+    print("\nMAL_HASH:")
+    print("---------")
+    print(hash_malicious)
+    print("---------")
