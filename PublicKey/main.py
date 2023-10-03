@@ -3,6 +3,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from Crypto.Util import number as gen
 import hashlib
+import csv
 
 # ==============================================
 # Part 1
@@ -100,63 +101,56 @@ def extgcd(a, b):
 # Part 2
 # ==============================================
 
-def generateStrongPrime(size):
-    print("Finding Prime...")
-    while True:
-        p = gen.getPrime(1024)
+def read_primes(file_name):
+    primes = []
+    with open(file_name, mode='r', newline='') as csvfile:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
+            primes.append(int(row[0]))
 
-        sub_p = (p-1) // 2
-
-        # Filter easy ones out
-        if (is_prime(sub_p, 4)):
-            print("Candidate prime found. Testing...")
-            # Make sure, beyond a reasonable doubt, that it is prime
-            if (is_prime(sub_p, 100)):
-                break
-            else:
-                print("Bad prime. Continuing...")
-
-    
-    print("======== STRONG PRIME ========")
-    print(p)
-
-    return p
-
+    return primes
 
 def DF():
-    # 2. select a strong prime number p (generated from generateStrongPrime but it was too slow to make you guys run it)
-    p = 154180384464032687815155462396108818680216104351104206799468777611815579870934449828389709537670091781240650043252977715393220648611346074832529712965656707683112946968286374793589994718538460837403921718071896183026646087599106823754464737366040175205133716820866582145400975740349486719506868778485032109727
-    
+    # 2. Select a strong prime number p (generated from generate_primes.py)
+
+    #    I would have used the generateStrongPrime function from generate_primes.py, but it takes a long to generate prime
+    #    numbers. For the ease of grading, I generated primes and added them to a list on my own computing time, and
+    #    just pulled one randomly from the list.
+
+    primes = read_primes("primes.csv")
+    # p = random.choice(primes)
+    p = primes[0]
     g = 5
 
-    print("=========== Prime ===========")
-    print(p, end="\n\n")
+    # print("=========== Prime ===========")
+    # print(p, end="\n\n")
         
     # 3. Select a random a as a private key and calculate the public key
     # private = random.randint(gen.getRandomInteger(512), p)
     private = 85828796062933845478302735406133425915054122841056058194110285606809213226125417691645239999933656258898831125541750795964074182624872958455633639610022137708042526798464334113306213947890478663269953036616281875903097865446632620756851169393070036370834068873347001062050007859884144299504248798545250394374
     public = fastModExp(g, private, p)
 
-    print("=========== private ===========")
-    print(private, end="\n\n")
-    print("=========== public ===========")
-    print(public, end="\n\n")
+    # print("=========== private ===========")
+    # print(private, end="\n\n")
+    # print("=========== public ===========")
+    # print(public, end="\n\n")
 
     # 4. Calculate the shared key
     server_public = 41158451850699340807602194352800210488407926296090248268094596960033679852278570862115266457972106711787382889921604694294213897843975541273776666769016415211481689891975308093846839483966181151264213133193022042544572157101767976558803911754485031970729270407625864776479009663480879652002462438938407437138
     shared_key = fastModExp(server_public, private, p)
 
-    print("=========== shared ===========")
-    print(shared_key, end="\n\n")
+    # print("=========== shared ===========")
+    # print(shared_key, end="\n\n")
 
     # 5. Transform your shared key into an symmetric encryption key by taking the SHA-256 hash of sharedkey and using the first 16 bytes (128-bits) of the digest.
     sha256 = hashlib.sha256()
-    bytes = shared_key.to_bytes(128, byteorder='big')
-
+    bytes = str(shared_key).encode()
     sha256.update(bytes)
 
     key = sha256.digest()[:16]
 
+    print("=========== bytes ===========")
+    print(bytes.hex(), end="\n\n")
     print("=========== key ===========")
     print(key.hex(), end="\n\n")
 
@@ -165,7 +159,7 @@ def DF():
     cipher.iv = 0xfe6b19e50b04bbbdbb7678af4ae5ae22
 
     ciphertext = 0xfef74daa391e446111c431fadfea98cbbcf19289e1db76fbc6cf618f163f027e15d43cae02f2264c208f54694198d503af876cf2316e7a34397e2e886cbeb449354b0eff0bc469e48a7b1e4103622f08a2035fd09ef007407fd3f68a91eadfaf691bf683445c3015d412fe5dbc1616aa08458ce3bbc46ed847d78f387c9397788f71460931c99c028d0e0d86406f7e5d69e10dfb3cacca8730a065ae1413da68a8efadbbc89066998eda6059af06360b83d8b4c2b1b452c8c5de4313a006a9dcba2ad7375be5aa318fa51ffb0e135802e3f1d02ac0788834bffc3a296d9227c38a778ec8c5acb7a60ae6c53fc3591e10
-    bytes = ciphertext.to_bytes(ciphertext.bit_length() + 7 // 8, byteorder='big')
+    bytes = str(ciphertext).encode()
     plaintext = unpad(cipher.decrypt(bytes), AES.block_size).decode('ASCII')
 
     print("=========== plaintext ===========")
@@ -174,30 +168,7 @@ def DF():
     return
 
 if __name__ == "__main__":
+    print("====================================")
     print("Welcome to Public-Key Cryptography.")
-
-
-
+    print("====================================\n\n")
     DF()
-
-    # p = 124324939652960984258044434147907041670072661585797675124087529764346148539727286757131888843684677630291542920742708008979129190966087058939665476714140416781425651251663882384637847158007274609719152123723246541610947204838526908511655326223232649536057367720103661909029300993416437653943474793791231383819
-    # p = 162678686084310055258700488842073532926262386687251226313503487957344517466497680907652384598538136262125191042145317706002209956994540816529264278186441566161235218059786993912948267193144039479072939569065942659516607878861561896300910724835931438574789091000512942608755298120306925358273405443101133484659
-    # p = 154180384464032687815155462396108818680216104351104206799468777611815579870934449828389709537670091781240650043252977715393220648611346074832529712965656707683112946968286374793589994718538460837403921718071896183026646087599106823754464737366040175205133716820866582145400975740349486719506868778485032109727
-
-    
-
-# =====================================
-# Graveyard
-# =====================================
-
-# print(fastModExp(11, 13, 19))
-
-## prime testing
-# for i in range(100000):
-#     primes = ""
-#     for p in range(1,100):
-#         if (prime(p, 30)):
-#             primes += str(p)
-
-#     if primes != "2357111317192329313741434753596167717379838997":
-#         print("INCORRECT")
