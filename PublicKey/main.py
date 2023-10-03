@@ -120,6 +120,8 @@ def get_val(type, message):
         x = int(input(message))
     elif type == 'b':
         x = int_to_bytes(int(input(message), 16))
+    elif type == 's':
+        x = input(message)
     else:
         raise Exception("Invalid type")
     print("")
@@ -131,7 +133,9 @@ def print_val(val, message):
     return
 
 def DF():
-    print ("\nDiffie-Hellman:\n")
+    print("=====================================")
+    print("Diffie-Hellman Key Exchange")
+    print("=====================================\n")
 
     # =========================================================================
     # 2. Select a strong prime number p and a generator g
@@ -156,9 +160,9 @@ def DF():
     print_val(public, "Public Key (g^a)")
 
     # Get variables from server
-    server_public = get_val('d', "Enter the server's public key: ")
-    iv            = get_val('b', "Enter the iv: ")
+    server_public = get_val('d', "Enter the server's public key (g^b): ")
     ciphertext    = get_val('b', "Enter the ciphertext: ")
+    iv            = get_val('b', "Enter the iv: ")
 
     # =========================================================================
     # 4. Calculate the shared key
@@ -189,15 +193,78 @@ def DF():
 # Part 3 RSA
 # ==============================================
 
+def encrypt(m, e, n):
+    m_bytes = m.encode('ASCII')
+    m_int = int.from_bytes(m_bytes, 'big')
+    return fastModExp(m_int, e, n)
+
+def decrypt(c, d, n):
+    m = fastModExp(c, d, n)
+    m_bytes = int_to_bytes(m)
+    return m_bytes.decode('ASCII')
+
 def RSA():
-    primes = read_primes()
+    print("=====================================")
+    print("RSA")
+    print("=====================================\n")
 
-    # Generate primes until one works
+    # ==============================================
+    # Key Generation
+    # ==============================================
+    while (True):
+        p = gen.getPrime(1024)
+        q = gen.getPrime(1024)
 
+        n = p * q
+
+        phi = (p-1) * (q-1)
+
+        e = 65537
+
+        # Check if ϕ(n) relatively prime to e
+        if (gcd(e, phi) == 1):
+            d = extgcd(e, phi)[0]
+            if (d > 0):
+                break
+
+    print_val(p, "p")
+    print_val(q, "q")
+    print_val(n, "n")
+    print_val(phi, "ϕ(n)")
+    print_val(d, "d")
+
+    # ==============================================
+    # RSA Encrypt
+    # ==============================================
+    m = get_val('s', "Message to encrypt: ")
+
+    c = encrypt(m, e, n)
+
+    print_val(c, "Encrypted Message")
+
+    # ==============================================
+    # RSA Decrypt
+    # ==============================================
+    c = get_val('d', "Message to decrypt: ")
+
+    m = decrypt(c, d, n)
+
+    print_val(m, "Decrypted Message")
     
     return
 
 if __name__ == "__main__":
-    print("Welcome to Public-Key Cryptography.")
-    DF()
+    print("Welcome to Public-Key Cryptography.\n")
+    print("[1] Diffie-Hellman")
+    print("[2] RSA")
+
+    choice = input("\nEnter option (1 or 2): ")
+    print("")
+
+    if choice == '1':
+        DF()
+    elif choice == '2':
+        RSA()
+    else:
+        print("\nInvalid choice. Exiting...")
 
