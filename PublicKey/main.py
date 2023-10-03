@@ -6,7 +6,7 @@ import hashlib
 import csv
 
 # ==============================================
-# Part 1
+# Part 1 PRIMALITY
 # ==============================================
 
 def fastModExp(b, e, m):
@@ -98,7 +98,7 @@ def extgcd(a, b):
     return s, t
 
 # ==============================================
-# Part 2
+# Part 2 DH
 # ==============================================
 
 def read_primes(file_name):
@@ -110,65 +110,94 @@ def read_primes(file_name):
 
     return primes
 
+def int_to_bytes(x: int) -> bytes:
+    return x.to_bytes((x.bit_length() + 7) // 8, 'big')
+
+def get_val(type, message):
+    if type == 'h':
+        x = int(input(message), 16)
+    elif type == 'd':
+        x = int(input(message))
+    elif type == 'b':
+        x = int_to_bytes(int(input(message), 16))
+    else:
+        raise Exception("Invalid type")
+    print("")
+    return x
+
+def print_val(val, message):
+    print(f"=========== {message} ===========")
+    print(val, end="\n\n")
+    return
+
 def DF():
-    # 2. Select a strong prime number p (generated from generate_primes.py)
+    print ("\nDiffie-Hellman:\n")
 
-    #    I would have used the generateStrongPrime function from generate_primes.py, but it takes a long to generate prime
-    #    numbers. For the ease of grading, I generated primes and added them to a list on my own computing time, and
-    #    just pulled one randomly from the list.
+    # =========================================================================
+    # 2. Select a strong prime number p and a generator g
+    # =========================================================================
+    # NOTE: I would have used the generateStrongPrime function from 
+    # generate_primes.py, but it takes a long to generate prime numbers. For 
+    # the ease of grading, I generated primes and added them to a list on my 
+    # own computing time, andjust pulled one randomly from the list. 
+    # =========================================================================
+    g = get_val('d', "Enter g: ")
+    strong_primes = read_primes("strong_primes.csv")
+    p = random.choice(strong_primes) # generated from generate_strong_primes.py
 
-    primes = read_primes("primes.csv")
-    # p = random.choice(primes)
-    p = primes[0]
-    g = 5
+    print_val(p, "Prime Modulus (p)")
 
-    # print("=========== Prime ===========")
-    # print(p, end="\n\n")
-        
+    # =========================================================================    
     # 3. Select a random a as a private key and calculate the public key
-    # private = random.randint(gen.getRandomInteger(512), p)
-    private = 85828796062933845478302735406133425915054122841056058194110285606809213226125417691645239999933656258898831125541750795964074182624872958455633639610022137708042526798464334113306213947890478663269953036616281875903097865446632620756851169393070036370834068873347001062050007859884144299504248798545250394374
+    # =========================================================================
+    private = random.randint(gen.getRandomInteger(512), p)
     public = fastModExp(g, private, p)
 
-    # print("=========== private ===========")
-    # print(private, end="\n\n")
-    # print("=========== public ===========")
-    # print(public, end="\n\n")
+    print_val(public, "Public Key (g^a)")
 
+    # Get variables from server
+    server_public = get_val('d', "Enter the server's public key: ")
+    iv            = get_val('b', "Enter the iv: ")
+    ciphertext    = get_val('b', "Enter the ciphertext: ")
+
+    # =========================================================================
     # 4. Calculate the shared key
-    server_public = 41158451850699340807602194352800210488407926296090248268094596960033679852278570862115266457972106711787382889921604694294213897843975541273776666769016415211481689891975308093846839483966181151264213133193022042544572157101767976558803911754485031970729270407625864776479009663480879652002462438938407437138
+    # =========================================================================
     shared_key = fastModExp(server_public, private, p)
+    print_val(shared_key, "Shared Key (g^ab)")
 
-    # print("=========== shared ===========")
-    # print(shared_key, end="\n\n")
+    # =========================================================================
+    # 5. Transform your shared key into a symmetric encryption key by taking 
+    #   the SHA-256 hash of shared_key and using the first 16 bytes (128-bits) 
+    # =========================================================================
 
-    # 5. Transform your shared key into an symmetric encryption key by taking the SHA-256 hash of sharedkey and using the first 16 bytes (128-bits) of the digest.
+    # SHA-256 hash of shared_key
     sha256 = hashlib.sha256()
-    bytes = str(shared_key).encode()
-    sha256.update(bytes)
+    sha256.update(int_to_bytes(shared_key))
 
     key = sha256.digest()[:16]
 
-    print("=========== bytes ===========")
-    print(bytes.hex(), end="\n\n")
-    print("=========== key ===========")
-    print(key.hex(), end="\n\n")
-
     # 6. Decrypt the message
-    cipher = AES.new(key, AES.MODE_CBC)
-    cipher.iv = 0xfe6b19e50b04bbbdbb7678af4ae5ae22
+    cipher = AES.new(key, AES.MODE_CBC, iv=iv)
+    plaintext = unpad(cipher.decrypt(ciphertext), AES.block_size).decode('ASCII')
 
-    ciphertext = 0xfef74daa391e446111c431fadfea98cbbcf19289e1db76fbc6cf618f163f027e15d43cae02f2264c208f54694198d503af876cf2316e7a34397e2e886cbeb449354b0eff0bc469e48a7b1e4103622f08a2035fd09ef007407fd3f68a91eadfaf691bf683445c3015d412fe5dbc1616aa08458ce3bbc46ed847d78f387c9397788f71460931c99c028d0e0d86406f7e5d69e10dfb3cacca8730a065ae1413da68a8efadbbc89066998eda6059af06360b83d8b4c2b1b452c8c5de4313a006a9dcba2ad7375be5aa318fa51ffb0e135802e3f1d02ac0788834bffc3a296d9227c38a778ec8c5acb7a60ae6c53fc3591e10
-    bytes = str(ciphertext).encode()
-    plaintext = unpad(cipher.decrypt(bytes), AES.block_size).decode('ASCII')
-
-    print("=========== plaintext ===========")
-    print(plaintext.hex(), end="\n\n")
+    print_val(plaintext, "Plaintext")
 
     return
 
+# ==============================================
+# Part 3 RSA
+# ==============================================
+
+def RSA():
+    primes = read_primes()
+
+    # Generate primes until one works
+
+    
+    return
+
 if __name__ == "__main__":
-    print("====================================")
     print("Welcome to Public-Key Cryptography.")
-    print("====================================\n\n")
     DF()
+

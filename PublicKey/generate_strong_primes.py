@@ -26,7 +26,7 @@ def generateStrongPrime(size):
     return p
 
 if __name__ == "__main__":
-    file_name = "primes.csv"
+    file_name = "strong_primes.csv"
     for i in range(100):
         with open(file_name, 'a', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
