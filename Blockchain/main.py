@@ -1,43 +1,60 @@
 from helper import *
 import random
 
-class BC:
-    def __init__(self, genesis):
-        self.chain = []
-        self.chain.append(genesis)
+class QuoteChain:
+    def __init__(self, genesis, d):
+        self.chain = [genesis]
+        self.d = d
         return
 
-    def proof(self, hash, d):
-        zeros = (256 - hash.bit_length())
-        return True if zeros >= d else False
+    def proof(self, block_hash):
+        zeros = (256 - block_hash.bit_length())
+        return zeros >= self.d
         
     def generate_nonce(self):
-        nonce = bytes([random.randint(0, 255) for _ in range(32)])
+        nonce = random.randint(0, 2**256 - 1)
         return nonce
 
-    def hash_block(self, quote, d):
-        p1 = H(int_to_bytes(self.chain[-1]))
-        p2 = self.generate_nonce()
+    def hash_block(self, quote):
+        nonce = self.generate_nonce()
+
+        p1 = self.chain[-1]
+        p2 = int_to_bytes(nonce)
         p3 = quote.encode('ascii')
 
+        print("Generating nonce...\n")
+
         while(1):    
-            hash = bytes_to_int(H(p1 + p2 + p3))
+            block_hash = H(p1 + p2 + p3)
+            block_hex = bytes_to_int(block_hash)
 
-            if self.proof(hash, d):
-                self.chain.append(hash)
-
-                print_val(bytes_to_int(p2), "Nonce")
-                print_val(hash, "Block hash")
-
-                return hash
+            if self.proof(block_hex):
+                print_val(nonce, "Nonce (int)")
+                print_val(block_hash.hex(), "Block hash (hex)")
+                return block_hash
             else:
-                p2 = self.generate_nonce()
+                nonce += 1
+                p2 = int_to_bytes(nonce)
+        
+    def add_block(self, quote):
+        block_hash = self.hash_block(quote)
+        self.chain.append(block_hash)
 
 if (__name__ == "__main__"):
-    genesis = 0x2a201ad6f1caeb8f5e6aba5a952ed72c7c3505e7863623821d7f29fdcb1d1b32
+    print("Welcome to QuoteChain.\n")
+    print("Enter the following information from the passoff server:\n")
+    genesis = get_val('h', "Enter genesis: ")
+    d = get_val('d', "Enter difficulty parameter: ")
 
-    quotechain = BC(genesis)
+    quotechain = QuoteChain(int_to_bytes(genesis), d)
 
-    h1 = quotechain.hash_block("Photography is painting with light. -- Eric Hamilton", 24)
+    for i in range(10):
+        print("#####################################################")
+        print(f"                      BLOCK {i+1}")
+        print("#####################################################\n")
+        quote = get_val('s', "Enter Quote: ")
+        h = quotechain.add_block(quote)
 
-    print_val(hex(h1), "H1")
+        input("Press Enter to continue...\n")
+
+    print("\nQuoteChain complete. Exiting.")
